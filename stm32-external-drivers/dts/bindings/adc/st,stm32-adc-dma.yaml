@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: ST STM32 family ADC
+
+compatible: "st,stm32-adc-dma"
+
+include: adc-controller.yaml
+
+properties:
+    reg:
+      required: true
+
+    clocks:
+      required: true
+
+    st,external-trigger:
+      type: int
+      required: true
+      description: |
+        Configures the hardware trigger source of the adc
+        controller. See the dt-bindings for relevant values.
+
+    pinctrl-0:
+      type: phandles
+      required: false
+      description: |
+        GPIO pin configuration for ADC input. The phandles are
+        expected to reference pinctrl nodes, e.g.
+           pinctrl-0 = <&adc_in0_pa0 &adc_in1_pa1>;
+
+    interrupts:
+      required: true
+
+    "#io-channel-cells":
+      const: 1
+
+io-channel-cells:
+    - input
