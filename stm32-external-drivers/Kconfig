@@ -5,21 +5,7 @@ config STM32_EXTERNAL_DRIVERS
 
 if STM32_EXTERNAL_DRIVERS
 
-config STM32_ADC_DMA
-	bool "Enable stm32 adc driver with dma and external trigger"
-	default y
-	depends on ADC
-	depends on DMA
-	select ADC_ASYNC
-	help
-	  Enable stm32 adc driver with dma and external trigger.
-
-config STM32_PWM_TRIG
-	bool "Enable stm32 pwm support with trgo update"
-	default y
-	select USE_STM32_LL_TIM
-	select USE_STM32_LL_RCC if SOC_SERIES_STM32F4X || SOC_SERIES_STM32F7X || SOC_SERIES_STM32H7X
-	help
-	  Enable stm32 pwm support with trgo update
+source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/drivers/Kconfig"
+source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/apps/Kconfig"
 
 endif # STM32_EXTERNAL_DRIVERS

@@ -5,3 +5,4 @@ build:
   kconfig: Kconfig
   settings:
     dts_root: .
+    # syscall_include_dirs: [include]

@@ -19,7 +19,6 @@
 #include <stm32_ll_adc.h>
 #include <drivers/dma.h>
 #include <dt-bindings/dma/stm32_dma.h>
-#include <drivers/dma.h>
 
 #define ADC_CONTEXT_USES_KERNEL_TIMER
 #include "../drivers/adc/adc_context.h"
@@ -228,7 +227,7 @@ static const uint32_t table_triggers[] = {
 #define STM32_CHANNEL_COUNT		20
 
 struct adc_dma_stream {
-	const char *dma_name;
+	const struct device *dma_dev;
 	uint32_t dma_channel;
 	struct dma_config dma_cfg;
 	uint8_t priority;
@@ -252,7 +251,6 @@ struct adc_stm32_data {
 	uint32_t buffer_size;
 	uint16_t *repeat_buffer;
 
-	const struct device *dev_dma_rx;
 	struct adc_dma_stream dma_rx;
 	uint8_t trigger_source;
 
@@ -302,7 +300,7 @@ static void adc_stm32_start_conversion(const struct device *dev)
 
 	LOG_DBG("Starting conversion");
 
-	if (data->dev_dma_rx == NULL) {
+	if (data->dma_rx.dma_dev == NULL) {
 		LOG_ERR("ADC ERR: RX DMA device not found!");
 		return;
 	}
@@ -310,7 +308,7 @@ static void adc_stm32_start_conversion(const struct device *dev)
 	data->dma_rx.blk_cfg.block_size = data->buffer_size;
 	data->dma_rx.blk_cfg.dest_address = (uint32_t)data->buffer;
 
-	ret = dma_config(data->dev_dma_rx, data->dma_rx.dma_channel,
+	ret = dma_config(data->dma_rx.dma_dev, data->dma_rx.dma_channel,
 				&data->dma_rx.dma_cfg);
 
 	if (ret != 0) {
@@ -318,14 +316,14 @@ static void adc_stm32_start_conversion(const struct device *dev)
 		return; // -EINVAL;
 	}
 
-	if (dma_start(data->dev_dma_rx, data->dma_rx.dma_channel)) {
+	if (dma_start(data->dma_rx.dma_dev, data->dma_rx.dma_channel)) {
 		LOG_ERR("ADC ERR: RX DMA start failed!");
 		return; // -EFAULT;
 	}
 
-	LL_ADC_REG_SetDMATransfer(adc, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
+	// LL_ADC_REG_SetDMATransfer(adc, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
 
-	printk("adc started\n");
+	LOG_DBG("adc started");
 
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || \
 	defined(CONFIG_SOC_SERIES_STM32F3X) || \
@@ -457,6 +455,7 @@ static int start_read(const struct device *dev,
 	defined(CONFIG_SOC_SERIES_STM32G4X) || \
 	defined(CONFIG_SOC_SERIES_STM32H7X)
 	// LL_ADC_EnableIT_EOC(adc);
+	LL_ADC_EnableIT_OVR(adc);
 #elif defined(CONFIG_SOC_SERIES_STM32F1X)
 	LL_ADC_EnableIT_EOS(adc);
 #else
@@ -496,6 +495,8 @@ static void adc_stm32_isr(const struct device *dev)
 		(const struct adc_stm32_cfg *)dev->config;
 	ADC_TypeDef *adc = config->base;
 
+	LOG_DBG("isr");
+
 	*data->buffer++ = LL_ADC_REG_ReadConversionData32(adc);
 
 	adc_context_on_sampling_done(&data->ctx, dev);
@@ -510,11 +511,11 @@ void adc_stm32_dma_rx_cb(const struct device *dma_dev, void *user_data,
 	struct adc_stm32_data *data = adc_dev->data;
 
 	if (status != 0) {
-		// async_evt_rx_err(data, status);
+		LOG_ERR("adc dma error: %d", status);
 		return;
 	}
 
-	printk("dma callback!\n");
+	LOG_DBG("dma callback!");
 
 	adc_context_on_sampling_done(&data->ctx, adc_dev);
 }
@@ -585,12 +586,23 @@ static void adc_stm32_setup_speed(const struct device *dev, uint8_t id,
 #endif
 }
 
+// static void adc_stm32_setup_offset(const struct device *dev, uint8_t id,
+// 				  uint16_t value)
+// {
+// 	const struct adc_stm32_cfg *config =
+// 		(const struct adc_stm32_cfg *)dev->config;
+// 	ADC_TypeDef *adc = config->base;
+
+// 	LL_ADC_SetOffset(adc, LL_ADC_OFFSET_1,
+// 			__LL_ADC_DECIMAL_NB_TO_CHANNEL(id), value);
+// }
+
 static int adc_stm32_channel_setup(const struct device *dev,
 				   const struct adc_channel_cfg *channel_cfg)
 {
 #if defined(CONFIG_SOC_SERIES_STM32F0X) || \
 	defined(CONFIG_SOC_SERIES_STM32G0X) || \
-	 defined(CONFIG_SOC_SERIES_STM32L0X)
+	defined(CONFIG_SOC_SERIES_STM32L0X)
 	struct adc_stm32_data *data = dev->data;
 #endif
 	int acq_time_index;
@@ -635,6 +647,8 @@ static int adc_stm32_channel_setup(const struct device *dev,
 
 	adc_stm32_setup_speed(dev, channel_cfg->channel_id,
 				  acq_time_index);
+
+	// adc_stm32_setup_offset(dev, channel_cfg->channel_id, 2048);
 
 	LOG_DBG("Channel setup succeeded!");
 
@@ -808,6 +822,8 @@ static int adc_stm32_init(const struct device *dev)
 
 	LL_ADC_REG_SetTriggerSource(adc, table_triggers[data->trigger_source]);
 
+	LL_ADC_REG_SetDMATransfer(adc, LL_ADC_REG_DMA_TRANSFER_UNLIMITED);
+
 	LL_ADC_Enable(adc);
 
 #if defined(CONFIG_SOC_SERIES_STM32L4X) || \
@@ -842,10 +858,9 @@ static int adc_stm32_init(const struct device *dev)
 #endif
 	adc_context_unlock_unconditionally(&data->ctx);
 
-	if (data->dma_rx.dma_name != NULL) {
-		data->dev_dma_rx = device_get_binding(data->dma_rx.dma_name);
-		if (data->dev_dma_rx == NULL) {
-			LOG_ERR("%s device not found", data->dma_rx.dma_name);
+	if (data->dma_rx.dma_dev != NULL) {
+		if (!device_is_ready(data->dma_rx.dma_dev)) {
+			LOG_ERR("ADC device not ready");
 			return -ENODEV;
 		}
 	}
@@ -891,7 +906,7 @@ static const struct adc_driver_api api_stm32_driver_api = {
 
 /* src_dev and dest_dev should be 'MEMORY' or 'PERIPHERAL'. */
 #define ADC_DMA_CHANNEL_INIT(index, dir, dir_cap, src_dev, dest_dev)	\
-	.dma_name = DT_INST_DMAS_LABEL_BY_NAME(index, dir),		\
+	.dma_dev = DEVICE_DT_GET(DT_INST_DMAS_CTLR_BY_NAME(index, dir)),	\
 	.dma_channel = DT_INST_DMAS_CELL_BY_NAME(index, dir, channel),	\
 	.dma_cfg = {							\
 		.dma_slot = DT_INST_DMAS_CELL_BY_NAME(index, dir, slot),\

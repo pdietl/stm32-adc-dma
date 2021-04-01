@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+
+source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/drivers/adc/Kconfig"
+
+source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/drivers/dac/Kconfig"
+
+source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/drivers/hwtrig/Kconfig"

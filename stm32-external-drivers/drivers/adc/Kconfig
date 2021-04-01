@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0
+
+DT_COMPAT_ST_STM32_ADC_DMA := st,stm32-adc-dma
+
+config STM32_ADC_DMA
+	bool "Enable stm32 adc driver with dma and external trigger"
+	default $(dt_compat_enabled,$(DT_COMPAT_ST_STM32_ADC_DMA))
+	depends on ADC
+	depends on DMA
+	select ADC_ASYNC
+	help
+	  Enable stm32 adc driver with dma and external trigger.

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+
+DT_COMPAT_ST_STM32_TIMER_TRIG := st,stm32-timer-trigger
+
+config STM32_TIMER_TRIG
+	bool "Enable stm32 hardware timer trigger support"
+	default $(dt_compat_enabled,$(DT_COMPAT_ST_STM32_TIMER_TRIG))
+	select USE_STM32_LL_TIM
+	select USE_STM32_LL_RCC if SOC_SERIES_STM32F4X || SOC_SERIES_STM32F7X || SOC_SERIES_STM32H7X
+	help
+	  Enable stm32 hardware timer trigger support.

@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config ADC_UART
+	bool "Enable adc to uart app"
+	help
+	  Enable adc to uart app. This is used with the async mode,
+	  and every half buffer the samples will be sent over uart.
