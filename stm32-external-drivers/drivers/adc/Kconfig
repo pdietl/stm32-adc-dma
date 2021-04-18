@@ -2,6 +2,13 @@
 
 DT_COMPAT_ST_STM32_ADC_DMA := st,stm32-adc-dma
 
+menuconfig EXTERNAL_ADC
+	bool "External ADC drivers"
+	help
+	  Enable external ADC (Analog to Digital Converter) driver configuration.
+
+if EXTERNAL_ADC
+
 config STM32_ADC_DMA
 	bool "Enable stm32 adc driver with dma and external trigger"
 	default $(dt_compat_enabled,$(DT_COMPAT_ST_STM32_ADC_DMA))
@@ -10,3 +17,5 @@ config STM32_ADC_DMA
 	select ADC_ASYNC
 	help
 	  Enable stm32 adc driver with dma and external trigger.
+
+endif # EXTERNAL_ADC

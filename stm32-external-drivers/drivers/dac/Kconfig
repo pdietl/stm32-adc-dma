@@ -2,6 +2,13 @@
 
 DT_COMPAT_ST_STM32_DAC_DMA := st,stm32-dac-dma
 
+menuconfig EXTERNAL_DAC
+	bool "External DAC drivers"
+	help
+	  Enable external DAC (Digital to Analog Converter) driver configuration.
+
+if EXTERNAL_DAC
+
 config STM32_DAC_DMA
 	bool "Enable stm32 dac driver with dma and external trigger"
 	default $(dt_compat_enabled,$(DT_COMPAT_ST_STM32_DAC_DMA))
@@ -22,3 +29,5 @@ config DAC_CONTINUOUS_API
 	depends on STM32_DAC_DMA
 	help
 	  Enable dac countinuous api.
+
+endif # EXTERNAL_DAC

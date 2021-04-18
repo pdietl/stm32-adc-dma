@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
-add_subdirectory(adc)
-add_subdirectory(dac)
-add_subdirectory(hwtrig)
+add_subdirectory_ifdef(CONFIG_EXTERNAL_ADC adc)
+add_subdirectory_ifdef(CONFIG_EXTERNAL_DAC dac)
+add_subdirectory_ifdef(CONFIG_HWTRIG hwtrig)

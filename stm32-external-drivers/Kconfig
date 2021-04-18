@@ -3,9 +3,13 @@
 config STM32_EXTERNAL_DRIVERS
 	bool "Enable external stm32 drivers"
 
+
 if STM32_EXTERNAL_DRIVERS
 
 source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/drivers/Kconfig"
+
 source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/apps/Kconfig"
+
+source "${ZEPHYR_STM32_EXTERNAL_DRIVERS_MODULE_DIR}/math/Kconfig"
 
 endif # STM32_EXTERNAL_DRIVERS
