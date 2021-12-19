@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config STM32_EXTERNAL_DRIVERS
+	bool "Enable external stm32 drivers"
+
+
+if STM32_EXTERNAL_DRIVERS
+
+source "${ZEPHYR_STM32_ADC_DMA_MODULE_DIR}/drivers/Kconfig"
+
+source "${ZEPHYR_STM32_ADC_DMA_MODULE_DIR}/apps/Kconfig"
+
+endif # STM32_EXTERNAL_DRIVERS

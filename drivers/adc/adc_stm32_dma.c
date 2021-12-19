@@ -18,7 +18,7 @@
 #include <soc.h>
 #include <stm32_ll_adc.h>
 #include <drivers/dma.h>
-#include <dt-bindings/dma/stm32_dma.h>
+//#include <dt-bindings/dma/stm32_dma.h>
 
 #define ADC_CONTEXT_USES_KERNEL_TIMER
 #include "../drivers/adc/adc_context.h"
@@ -28,7 +28,7 @@
 LOG_MODULE_REGISTER(adc_stm32_dma);
 
 #include <drivers/clock_control/stm32_clock_control.h>
-#include <pinmux/stm32/pinmux_stm32.h>
+#include <pinmux/pinmux_stm32.h>
 
 #if !defined(CONFIG_SOC_SERIES_STM32F0X) && \
 	!defined(CONFIG_SOC_SERIES_STM32G0X) && \
@@ -757,7 +757,7 @@ static int adc_stm32_init(const struct device *dev)
 	defined(CONFIG_SOC_SERIES_STM32G4X) || \
 	defined(CONFIG_SOC_SERIES_STM32H7X)
 	LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc),
-			      LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+			      LL_ADC_CLOCK_ASYNC_DIV1);
 #elif defined(CONFIG_SOC_SERIES_STM32L1X)
 	LL_ADC_SetCommonClock(__LL_ADC_COMMON_INSTANCE(adc),
 			LL_ADC_CLOCK_ASYNC_DIV4);
